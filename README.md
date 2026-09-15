@@ -7,7 +7,7 @@ Standalone Oracle v5.0 football-odds pattern predictor.
 - nearest-neighbour pattern comparison
 - consensus, trap, fatigue and injury checks
 - optional double-chance selection and capped 2% staking suggestion
-- additive secondary-results predictor trained on 47 probability/score rows from the supplied JPG
+- additive secondary-results predictor trained on 48 completed probability/score rows
 - automatic transfer of the mother predictor's Home/Draw/Away percentages into the secondary engine
 
 The mother predictor logic remains unchanged; the JPG study runs as an independent second opinion.
