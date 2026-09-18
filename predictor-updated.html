@@ -18,6 +18,7 @@
 <section><div class="pick" id="pick"><h2>🎯 1000+ PREDICTOR</h2><p>Enter odds, add any known match context, and fire the engine. Weak, conflicting, or trap-like matches are skipped.</p></div><div class="panel mt"><div class="title">💰 Verdict & Stake</div><div class="betBox" id="bet"><span class="tag">WAITING</span><strong>KSh 0.00</strong><p>Awaiting analysis…</p></div></div><div id="alerts"></div><div class="panel mt"><div class="title">🧠 Consensus & Trap Analysis</div><div id="analysis"></div></div><div class="panel mt"><div class="title">📊 Reference Probabilities</div><div class="bars" id="bars"></div></div><div class="cards" id="metrics"></div>
 <div class="panel mt" id="secondaryPanel"><div class="title">🔬 Secondary Results Predictor · JPG Study</div><p class="sub">This independent engine compares the mother predictor percentages with the recorded probability-and-score results in your JPG.</p><div class="inputs mt"><label>Mother Home %<input type="number" id="secHome" step="0.1" min="0" max="100"></label><label>Mother Draw %<input type="number" id="secDraw" step="0.1" min="0" max="100"></label><label>Mother Away %<input type="number" id="secAway" step="0.1" min="0" max="100"></label><label>Closest matches<input type="number" id="secK" value="7" min="3" max="15"></label></div><div class="controls"><button id="useMother">↙ USE MOTHER %</button><button class="primary" id="runSecondary">🔬 SECOND OPINION</button></div><div class="betBox mt" id="secondaryResult"><span class="tag">WAITING</span><strong>—</strong><p>Run the mother predictor, then use its percentages here.</p></div><div class="bars mt" id="secondaryBars"></div><div class="cards" id="secondaryMetrics"></div></div>
 <div class="panel mt" id="thirdPanel"><div class="title">🧪 Third Predictor · Result Cross-check</div><p class="sub">Checks the secondary opinion against 23 ordinary percentage/actual-score records. One red-card result is shown in the sheet but excluded from pattern matching. It only gives a result when several nearby outcomes agree. A matching pattern is not a guarantee.</p><div class="betBox mt" id="thirdResult"><span class="tag">WAITING</span><strong>—</strong><p>Run the secondary opinion to check these new results.</p></div><div class="title mt">Third predictor percentages · 7 nearest records</div><div class="bars" id="thirdBars"></div><p class="sub" id="thirdPercentNote"></p><div class="cards" id="thirdMetrics"></div></div>
+<div class="panel mt" id="fourthPanel"><div class="title">🏁 Fourth Predictor · Home or Away</div><p class="sub">Compares the third predictor's output percentages with completed scores in the two new JPGs. Draws and conflicting results weaken the evidence. It shows HOME WIN, AWAY WIN, or AVOID MATCH.</p><div class="betBox mt" id="fourthResult"><span class="tag">WAITING</span><strong>—</strong><p>Run the secondary and third predictors to get the fourth opinion.</p></div><div class="cards" id="fourthMetrics"></div></div>
 </section></div>
 <p class="notice">Predictions are estimates, not guarantees. Never stake money you cannot afford to lose.</p></main>
 <script>
@@ -49,6 +50,32 @@ const THIRD_RESULTS=[
 [43.7,14.3,42,'0-2'],[47.7,0,52.3,'2-2'],[57.4,29.6,13.1,'3-1']
 ].map(([home,draw,away,score])=>{const [h,a]=score.split('-').map(Number);return{p:[home,draw,away],score,result:h>a?'1':h<a?'2':'X'}});
 
+// Two newer JPGs: third-predictor percentages and completed scores. Identical repeated rows count once.
+// The one match marked red-carded is excluded because that event can change the result independently.
+const FOURTH_ROWS=[
+[52.3,9.9,37.8,'1-0'],[50.2,19.2,30.6,'2-1'],
+[38.4,34.8,26.8,'2-1'],[30.9,31.6,37.5,'0-1'],[37.8,24.3,38,'1-3'],
+[37.2,26.9,35.9,'1-2'],[45.8,12.2,42,'0-1'],[37.4,35,27.5,'5-0'],
+[36.3,0,63.7,'0-1'],[37.9,0,62.1,'1-2'],[31.3,0,68.7,'0-2'],
+[33.2,0,66.8,'1-0'],[34,0,66,'3-0'],[37.2,0,62.8,'2-2'],
+[32.3,0,67.7,'1-3'],[38.5,0,61.5,'0-0'],[36.9,0,63.1,'1-2'],[60.6,0,39.4,'1-5'],
+[39.8,12.9,47.3,'1-2'],[39.4,13.6,47,'1-1'],[38.4,16.8,44.8,'1-1'],
+[42.6,31.7,25.6,'2-4'],[37.1,15.1,47.8,'0-3'],[27.4,13.6,59,'1-3'],
+[31.1,25.8,43.1,'0-0'],[31.3,25.7,43,'0-0'],[48.5,20.5,31,'1-0'],
+[45.3,33.4,21.3,'1-2'],[27.3,27.3,45.4,'1-2'],[25.8,27.6,46.5,'0-1'],
+[33.4,24.6,42.1,'1-2'],[41.5,24,34.5,'3-3'],
+[12.7,14.7,72.6,'2-2'],[13.4,15.4,71.2,'0-2'],[0,26.9,73.1,'1-2'],
+[0,25.6,74.4,'1-4'],[0,25.7,74.3,'0-0'],[0,28.7,71.3,'2-3'],[29.2,0,70.8,'0-2'],
+[26.8,14.5,58.7,'0-0'],[24.7,17,58.3,'1-3'],[22.4,18.4,59.2,'2-2'],
+[22.8,23.4,53.8,'1-1'],
+[56.7,0,43.3,'0-0'],[43.2,0,56.8,'1-1'],[44.3,0,55.7,'4-1'],
+[44.3,0,55.7,'1-1'],[41.1,0,58.9,'3-1'],[40.9,0,59.1,'1-0'],
+[13,27.8,59.2,'1-3'],[12.6,27.8,59.6,'0-1'],[31.4,10.5,58.1,'2-3'],
+[34.5,12,53.5,'1-2'],[37.6,11.7,50.7,'0-2'],[51.8,10.1,38.1,'2-3'],[30.8,12.4,56.8,'0-2']
+];
+const FOURTH_RESULTS=[...new Map(FOURTH_ROWS.map(r=>[r.join('|'),r])).values()]
+ .map(([home,draw,away,score])=>{const [h,a]=score.split('-').map(Number);return{p:[home,draw,away],score,result:h>a?'1':h<a?'2':'X'}});
+
 // These are local examples, not calibrated probabilities. A single close row is insufficient.
 function thirdStudy(q,secondaryPick){
  const ranked=THIRD_RESULTS.map((m,i)=>({...m,row:i+1,distance:Math.hypot(...m.p.map((v,j)=>v-q[j]))}))
@@ -65,7 +92,7 @@ function thirdStudy(q,secondaryPick){
  return{near,comparison,counts,percentages,leader,share,exact,enough,secondaryPick,agrees:enough&&leader===secondaryPick};
 }
 function renderThird(q,secondaryPick){
- if(!q||q.some(v=>!Number.isFinite(v))){$('thirdResult').innerHTML='<span class="tag">WAITING</span><strong>—</strong><p>Enter valid secondary percentages first.</p>';$('thirdBars').innerHTML='';$('thirdPercentNote').textContent='';$('thirdMetrics').innerHTML='';return}
+ if(!q||q.some(v=>!Number.isFinite(v))){$('thirdResult').innerHTML='<span class="tag">WAITING</span><strong>—</strong><p>Enter valid secondary percentages first.</p>';$('thirdBars').innerHTML='';$('thirdPercentNote').textContent='';$('thirdMetrics').innerHTML='';renderFourth(null);return}
  const t=thirdStudy(q,secondaryPick),confirmed=t.agrees;
  const headline=t.enough?LABEL[t.leader]:'NO CLEAR RESULT';
  const evidence=t.exact?`Exact recorded pattern: <b>${t.exact.score}</b> (${LABEL[t.exact.result]}). `:'';
@@ -77,6 +104,24 @@ function renderThird(q,secondaryPick){
  $('thirdBars').innerHTML=['1','X','2'].map((key,i)=>`<div class="bar"><b>${LABEL[key].replace(' WIN','')}</b><div class="track"><div class="fill" style="width:${pct(t.percentages[key])};background:${['var(--home)','var(--draw)','var(--away)'][i]}"></div></div><span>${pct(t.percentages[key])}</span></div>`).join('');
  $('thirdPercentNote').textContent=`Distance-weighted shares of the ${t.comparison.length} nearest recorded results, not forecast probabilities. ${t.enough?'The verdict also checks close outcomes and secondary agreement.':t.near.length===0?'No close matches: these percentages are a weak comparison.':'Too few consistent close outcomes for a clear verdict.'}`;
  $('thirdMetrics').innerHTML=[[THIRD_RESULTS.length,'Usable JPG rows'],[t.near.length,'Within 12 points'],[t.near.length?`${t.counts['1']} / ${t.counts.X} / ${t.counts['2']}`:'—','Close Home / Draw / Away'],[`${t.comparison[0].distance.toFixed(1)} points`,'Closest distance']].map(v=>`<div class="metric"><b>${v[0]}</b><span>${v[1]}</span></div>`).join('');
+ renderFourth(['1','X','2'].map(key=>t.percentages[key]*100));
+}
+function fourthStudy(q){
+ const ranked=FOURTH_RESULTS.map(m=>({...m,distance:Math.hypot(...m.p.map((v,i)=>v-q[i]))})).sort((a,b)=>a.distance-b.distance);
+ const near=ranked.filter(m=>m.distance<=12),counts={'1':0,X:0,'2':0};near.forEach(m=>counts[m.result]++);
+ const side=counts['1']>counts['2']?'1':'2',share=near.length?counts[side]/near.length:0;
+ const reliable=near.length>=4&&ranked[0].distance<=6&&share>=.75&&counts.X/near.length<=.20&&
+   near[0].result===side&&near[1].result===side;
+ return{near,ranked,counts,share,side,reliable};
+}
+function renderFourth(q){
+ if(!q||q.some(v=>!Number.isFinite(v))){$('fourthResult').innerHTML='<span class="tag">WAITING</span><strong>—</strong><p>Run the secondary and third predictors first.</p>';$('fourthMetrics').innerHTML='';return}
+ const r=fourthStudy(q),headline=r.reliable?LABEL[r.side]:'AVOID MATCH';
+ const reason=r.near.length<4?'Too few close completed matches.':r.ranked[0].distance>6?'The closest recorded pattern is too far away.':
+ r.counts.X/r.near.length>.20?'Too many nearby matches ended in a draw.':
+ !r.reliable?'Nearby Home and Away outcomes conflict.':'Nearby completed results favor this side, but the sample is small.';
+ $('fourthResult').innerHTML=`<span class="tag" style="color:${r.reliable?'var(--success)':'var(--danger)'}">${r.reliable?'FOURTH OPINION':'AVOID · NO RELIABLE SIDE'}</span><strong>${headline}</strong><p>${reason} This is a pattern check, not a guaranteed win.</p>`;
+ $('fourthMetrics').innerHTML=[[FOURTH_RESULTS.length,'Distinct completed rows'],[r.near.length,'Within 12 points'],[`${r.counts['1']} / ${r.counts.X} / ${r.counts['2']}`,'Home / Draw / Away results'],[r.ranked[0].distance.toFixed(1)+' points','Closest distance']].map(v=>`<div class="metric"><b>${v[0]}</b><span>${v[1]}</span></div>`).join('');
 }
 function useMotherProbabilities(){const values=[...document.querySelectorAll('#bars .bar span')].map(x=>parseFloat(x.textContent));if(values.length!==3||values.some(v=>!Number.isFinite(v))){render();return useMotherProbabilities()}$('secHome').value=values[0].toFixed(1);$('secDraw').value=values[1].toFixed(1);$('secAway').value=values[2].toFixed(1);secondaryPrediction()}
 $('run').onclick=()=>{const b=$('run');b.disabled=true;b.textContent='Scanning…';setTimeout(()=>{render();useMotherProbabilities();b.disabled=false;b.textContent='🎯 FIRE ENGINE'},250)};$('copy').onclick=async()=>{if(!$('summary').value)render();try{await navigator.clipboard.writeText($('summary').value);$('copy').textContent='COPIED ✓';setTimeout(()=>$('copy').textContent='📋 COPY SUMMARY',1200)}catch(e){$('summary').select()}};$('useMother').onclick=useMotherProbabilities;$('runSecondary').onclick=secondaryPrediction;$('dbCount').textContent=ARCHIVE.length.toLocaleString();render();
