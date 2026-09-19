@@ -14,4 +14,10 @@ The mother predictor logic remains unchanged. The third cross-check receives the
 
 Predictions are estimates and are not guaranteed.
 
+## Unified safety and validation layer
+
+The site now includes a validation-locked unified decision. It combines the no-margin bookmaker baseline with the clean 168-match archive; the dependent secondary, third and fourth checks can contribute no more than 10% and receive no weight when they conflict.
+
+A leave-one-out diagnostic tests every clean archived match without using its own result. The current diagnostic does not demonstrate a positive flat-stake return, so the unified layer remains locked in `AVOID · RESEARCH MODE`. This is intentional: the interface must not present an unvalidated historical pattern as a wagering edge. The Real Results Tracker now also records the unified output so genuinely new matches can provide forward evidence.
+
 The fourth predictor automatically reads the third predictor's output percentages and compares them with 56 distinct completed rows transcribed from two additional JPGs. One red-carded game and exact repeated rows are excluded. A candidate needs at least four outcomes within a 12-point Euclidean distance, a nearest row within 6 points, at least 75% of nearby outcomes for the side, at most 20% draws, and the two closest results on that side. Otherwise the output is AVOID MATCH. It never predicts a draw or an exact score. It shows distance-weighted Home, Draw risk, and Away percentages from seven nearest completed results even when the verdict is AVOID MATCH; these descriptive percentages are not calibrated forecasts. A small leave-one-out check did not establish reliable accuracy; a HOME/AWAY result is a pattern signal, not an assured outcome or a calibrated probability.
