@@ -2,7 +2,8 @@
 
 Standalone Oracle v5.0 football-odds pattern predictor.
 
-- 1,200 deterministic reference profiles expanded from the supplied archive patterns
+- 301 deduplicated real odds/outcome records in the expanded decision archive
+- 1,200 deterministic mother-reference profiles expanded from 100 supplied seed patterns
 - market-implied probability and bookmaker-margin calculation
 - nearest-neighbour pattern comparison
 - consensus, trap, fatigue and injury checks
@@ -16,7 +17,9 @@ Predictions are estimates and are not guaranteed.
 
 ## Unified safety and validation layer
 
-The site now includes a validation-locked unified decision. It combines the no-margin bookmaker baseline with the clean 168-match archive; the dependent secondary, third and fourth checks can contribute no more than 10% and receive no weight when they conflict.
+The site now includes a validation-locked unified decision. It combines the no-margin bookmaker baseline with an expanded 301-match real-odds archive; the dependent secondary, third and fourth checks can contribute no more than 10% and receive no weight when they conflict.
+
+The expanded archive recovers every valid odds-bearing source that was already embedded in the site: 168 clean score rows, 47 additional earlier-JPG score rows and 86 original seed outcomes not already represented by the same odds and result. Percentage-only third/fourth rows are not mixed into this archive because they do not contain bookmaker odds. The original mother predictor formula and its 1,200 generated reference profiles remain unchanged.
 
 A leave-one-out diagnostic tests every clean archived match without using its own result. The current diagnostic does not demonstrate a positive flat-stake return, so the unified layer remains locked in `AVOID · RESEARCH MODE`. This is intentional: the interface must not present an unvalidated historical pattern as a wagering edge. The Real Results Tracker now also records the unified output so genuinely new matches can provide forward evidence.
 
