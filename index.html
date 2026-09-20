@@ -23,6 +23,7 @@
 <div class="panel mt" id="trackerPanel"><div class="title">🧾 Real Results Tracker</div><p class="sub">Save the final score only after the match. The tracker stores the odds and every pre-match opinion, then measures honest hit rate and coverage on genuinely new games. Records stay on this device and can be exported as CSV.</p><div class="inputs mt"><label>Match name<input id="trackMatch" placeholder="Home team vs Away team"></label><label>Match date<input type="date" id="trackDate"></label><label>Final home goals<input type="number" id="trackHomeGoals" min="0" step="1"></label><label>Final away goals<input type="number" id="trackAwayGoals" min="0" step="1"></label></div><div class="controls"><button class="primary" id="saveResult">SAVE COMPLETED MATCH</button><button id="exportResults">DOWNLOAD TRACKER CSV</button></div><div class="betBox mt" id="trackerStatus"><span class="tag">NO SAVED RESULTS</span><strong>0 real games</strong><p>Run the predictors before kickoff, then return after the match to save the final score.</p></div><div class="cards" id="trackerMetrics"></div></div>
 <div class="panel mt" id="masterArchivePanel"><div class="title">🗂️ Expanded Real-Odds Archive · Odds Bands</div><p class="sub">The 301 recovered outcomes are separated by the favourite's no-margin probability: Balanced below 42%, Moderate 42–55%, and Strong 55%+. Each match is compared within its own band; a global fallback is used only when a band has fewer than 30 records.</p><div class="betBox mt" id="masterArchiveResult"><span class="tag">WAITING</span><strong>—</strong><p>Run the engine to compare these odds with the expanded archive.</p></div><div class="title mt">Banded archive outcome shares</div><div class="bars" id="masterArchiveBars"></div><p class="sub" id="masterArchiveNote"></p><div class="cards" id="masterArchiveMetrics"></div></div>
 <div class="panel mt" id="unifiedPanel"><div class="title">🛡️ One Final Formula · Validation Locked</div><p class="sub">Final evidence = 50% no-margin bookmaker baseline + 40% expanded real archive + 10% chain confirmation. If the secondary, third and fourth checks do not agree, their 10% is removed and the two independent inputs are renormalized.</p><div class="betBox mt" id="unifiedResult"><span class="tag">WAITING</span><strong>—</strong><p>Run the engine for the final safety decision.</p></div><div class="title mt">Combined evidence shares</div><div class="bars" id="unifiedBars"></div><p class="sub" id="unifiedNote"></p><div class="cards" id="unifiedMetrics"></div></div>
+<div class="panel mt" id="creativePanel"><div class="title">🎨 Creative Formula · Home vs Away Only</div><p class="sub">Reallocates the final formula's Home and Away evidence to total 100%, while Draw is always displayed as 0%. This answers “which side is stronger if the match does not draw?” It is not a true 1X2 probability and does not mean a draw is impossible.</p><div class="betBox mt" id="creativeResult"><span class="tag">WAITING</span><strong>—</strong><p>Run the engine to calculate the two-way conditional view.</p></div><div class="title mt">Creative conditional shares</div><div class="bars" id="creativeBars"></div><p class="sub" id="creativeNote"></p><div class="cards" id="creativeMetrics"></div></div>
 <div class="panel mt" id="validationPanel"><div class="title">📐 Validation Lab · Leave-One-Out Check</div><p class="sub">Each archived match is tested without using its own result. This is a useful warning test, but not a substitute for future-match tracking because the archive has no reliable dates.</p><div class="betBox mt" id="validationResult"><span class="tag">TESTING</span><strong>—</strong><p>Calculating historical coverage, accuracy and flat-stake return.</p></div><div class="cards" id="validationMetrics"></div></div>
 </section></div>
 <p class="notice">Predictions are estimates, not guarantees. Never stake money you cannot afford to lose.</p></main>
@@ -162,7 +163,8 @@ function predictorSnapshot(){return{
  secondary:{pick:visiblePick('secondaryResult'),p:visiblePercentages('secondaryBars')},
  third:{pick:visiblePick('thirdResult'),p:visiblePercentages('thirdBars')},
  fourth:{pick:visiblePick('fourthResult'),p:visiblePercentages('fourthBars')},
- unified:{pick:visiblePick('unifiedResult'),p:visiblePercentages('unifiedBars')}
+ unified:{pick:visiblePick('unifiedResult'),p:visiblePercentages('unifiedBars')},
+ creative:{pick:visiblePick('creativeResult'),p:visiblePercentages('creativeBars')}
 }}
 function saveTrackedResult(){
  const match=$('trackMatch').value.trim(),date=$('trackDate').value,h=+$('trackHomeGoals').value,a=+$('trackAwayGoals').value;
@@ -176,14 +178,14 @@ function saveTrackedResult(){
 }
 function rate(rows,name){const issued=rows.filter(r=>r.predictions?.[name]?.pick),hits=issued.filter(r=>r.predictions[name].pick===r.result).length;return{issued:hits||issued.length?issued.length:0,hits,pct:issued.length?hits/issued.length:null}}
 function renderTracker(){
- const rows=trackerRows(),names=['mother','secondary','third','fourth','unified'],rates=Object.fromEntries(names.map(n=>[n,rate(rows,n)]));
+ const rows=trackerRows(),names=['mother','secondary','third','fourth','unified','creative'],rates=Object.fromEntries(names.map(n=>[n,rate(rows,n)]));
  $('trackerStatus').innerHTML=rows.length?`<span class="tag" style="color:var(--success)">TRACKING ACTIVE</span><strong>${rows.length} real game${rows.length===1?'':'s'}</strong><p>Only predictions that actually issued a result count toward hit rate. Skips remain visible through coverage.</p>`:'<span class="tag">NO SAVED RESULTS</span><strong>0 real games</strong><p>Run the predictors before kickoff, then return after the match to save the final score.</p>';
  $('trackerMetrics').innerHTML=names.map(n=>{const r=rates[n],accuracy=r.pct===null?'—':pct(r.pct),coverage=rows.length?pct(r.issued/rows.length):'—';return`<div class="metric"><b>${accuracy}</b><span>${n[0].toUpperCase()+n.slice(1)} hit rate<br>${r.hits}/${r.issued} picks · ${coverage} coverage</span></div>`}).join('');
 }
 function csvCell(v){const s=String(v??'');return /[",\n]/.test(s)?`"${s.replaceAll('"','""')}"`:s}
 function exportTracker(){
  const rows=trackerRows();if(!rows.length){$('trackerStatus').innerHTML='<span class="tag" style="color:var(--danger)">NOTHING TO EXPORT</span><strong>0 real games</strong><p>Save at least one completed match first.</p>';return}
- const names=['mother','secondary','third','fourth','unified'],header=['date','match','home_odds','draw_odds','away_odds','score','actual_result',...names.flatMap(n=>[`${n}_pick`,`${n}_home_pct`,`${n}_draw_pct`,`${n}_away_pct`])];
+ const names=['mother','secondary','third','fourth','unified','creative'],header=['date','match','home_odds','draw_odds','away_odds','score','actual_result',...names.flatMap(n=>[`${n}_pick`,`${n}_home_pct`,`${n}_draw_pct`,`${n}_away_pct`])];
  const lines=[header,...rows.map(r=>[r.date,r.match,...r.odds,r.score,r.result,...names.flatMap(n=>[r.predictions[n]?.pick||'',...(r.predictions[n]?.p||['','',''])])])].map(row=>row.map(csvCell).join(','));
  const url=URL.createObjectURL(new Blob([lines.join('\n')],{type:'text/csv'})),a=document.createElement('a');a.href=url;a.download='oracle-real-results.csv';a.click();URL.revokeObjectURL(url);
 }
@@ -212,6 +214,17 @@ function historicalValidation(){
  return{games:MASTER_ARCHIVE.length,picks,hits,accuracy:picks?hits/picks:0,coverage:picks?picks/MASTER_ARCHIVE.length:0,profit,roi:picks?profit/picks:0,passed:picks>=30&&profit/picks>.03};
 }
 const HISTORICAL_VALIDATION=historicalValidation();
+function creativeHistoricalValidation(){
+ let picks=0,hits=0,draws=0,profit=0;
+ MASTER_ARCHIVE.forEach((match,index)=>{
+  const pool=MASTER_ARCHIVE.filter((_,i)=>i!==index),a=archiveStudyFor({home:match.h,draw:match.d,away:match.a},pool),marketArray=noVig(match.h,match.d,match.a),market={'1':marketArray[0]/100,X:marketArray[1]/100,'2':marketArray[2]/100};
+  const combined={'1':market['1']*.556+a.percentages['1']*.444,X:market.X*.556+a.percentages.X*.444,'2':market['2']*.556+a.percentages['2']*.444},sideTotal=combined['1']+combined['2'],home=combined['1']/sideTotal,away=combined['2']/sideTotal,leader=home>=away?'1':'2',lead=Math.abs(home-away),margin=(1/match.h+1/match.d+1/match.a-1)*100;
+  const selected=a.reliable&&lead>=.12&&margin<=10;
+  if(selected){picks++;if(match.result==='X')draws++;if(leader===match.result){hits++;profit+=(leader==='1'?match.h:match.a)-1}else profit-=1}
+ });
+ return{games:MASTER_ARCHIVE.length,picks,hits,draws,accuracy:picks?hits/picks:0,coverage:picks?picks/MASTER_ARCHIVE.length:0,profit,roi:picks?profit/picks:0,passed:picks>=30&&profit/picks>.03};
+}
+const CREATIVE_VALIDATION=creativeHistoricalValidation();
 function unifiedSafetyStudy(){
  const x=input(),marketArray=noVig(x.home,x.draw,x.away),market={'1':marketArray[0]/100,X:marketArray[1]/100,'2':marketArray[2]/100},archive=archiveStudyFor(x,MASTER_ARCHIVE);
  const chain=['secondaryResult','thirdResult','fourthResult'].map(visiblePick).filter(Boolean),counts={'1':0,X:0,'2':0};chain.forEach(k=>counts[k]++);
@@ -238,5 +251,21 @@ function renderUnifiedSafety(){
  $('unifiedNote').textContent=`Baseline and archive carry at least 90% of the weight. ${r.chainAgreement?'The chained checks agree and receive only 10%.':'The chained checks receive 0% because they are unclear or conflicting.'}`;
  $('unifiedMetrics').innerHTML=[[LABEL[r.leader],'Evidence leader'],[pct(r.lead),'Lead over second'],[r.archive.within,'Close archive rows'],[r.chain.length?`${r.chain.length} clear`:'None','Chained opinions'],[r.margin.toFixed(1)+'%','Bookmaker margin'],[HISTORICAL_VALIDATION.passed?'UNLOCKED':'LOCKED','Validation gate']].map(v=>`<div class="metric"><b>${v[0]}</b><span>${v[1]}</span></div>`).join('');
 }
-renderValidation();renderUnifiedSafety();$('run').addEventListener('click',()=>setTimeout(renderUnifiedSafety,420));
+function creativeFormulaStudy(){
+ const base=unifiedSafetyStudy(),sideTotal=base.combined['1']+base.combined['2'];
+ const shares={'1':base.combined['1']/sideTotal,X:0,'2':base.combined['2']/sideTotal},leader=shares['1']>=shares['2']?'1':'2',lead=Math.abs(shares['1']-shares['2']);
+ const sideContextRisk=(leader==='1'&&(base.x.homeFatigue||base.x.homeInjuries))||(leader==='2'&&(base.x.awayFatigue||base.x.awayInjuries));
+ const clear=base.archive.reliable&&lead>=.12&&base.margin<=10&&!sideContextRisk;
+ return{...base,shares,leader,lead,drawRisk:base.combined.X,sideContextRisk,clear,actionable:clear&&CREATIVE_VALIDATION.passed};
+}
+function renderCreativeFormula(){
+ let r;try{r=creativeFormulaStudy()}catch(e){$('creativeResult').innerHTML='<span class="tag" style="color:var(--danger)">CHECK ODDS</span><strong>—</strong><p>Enter valid odds first.</p>';return}
+ const headline=r.clear?LABEL[r.leader]:'NO RELIABLE SIDE',color=r.actionable?'var(--success)':r.clear?'var(--cyan)':'var(--danger)',tag=r.actionable?'VALIDATED TWO-WAY SIGNAL':r.clear?'CONDITIONAL LEAN · SAFETY LOCKED':'AVOID · SIDES TOO CLOSE';
+ const detail=r.clear?`${LABEL[r.leader]} is stronger after redistributing only the Home and Away evidence. ${CREATIVE_VALIDATION.passed?'The creative validation gate is open.':'This remains a research view because the creative formula has not demonstrated positive historical ROI.'}`:'The Home and Away shares are shown, but their separation or supporting archive evidence is too weak to name a reliable side.';
+ $('creativeResult').innerHTML=`<span class="tag" style="color:${color};border-color:${color}">${tag}</span><strong style="color:${color}">${headline}</strong><p>${detail} A real draw remains possible.</p>`;
+ $('creativeBars').innerHTML=['1','X','2'].map((k,i)=>`<div class="bar"><b>${LABEL[k].replace(' WIN','')}</b><div class="track"><div class="fill" style="width:${pct(r.shares[k])};background:${['var(--home)','var(--draw)','var(--away)'][i]}"></div></div><span>${pct(r.shares[k])}</span></div>`).join('');
+ $('creativeNote').textContent='Formula: Home* = Home ÷ (Home + Away); Draw* = 0; Away* = Away ÷ (Home + Away). These conditional shares always total 100%.';
+ $('creativeMetrics').innerHTML=[[LABEL[r.leader],'Conditional leader'],[pct(r.lead),'Home/Away separation'],[pct(r.drawRisk),'Original draw evidence'],[r.archive.band.label,'Active odds band'],[`${CREATIVE_VALIDATION.hits}/${CREATIVE_VALIDATION.picks}`,'Historical correct / selected'],[pct(CREATIVE_VALIDATION.accuracy),'Historical accuracy'],[`${CREATIVE_VALIDATION.profit>=0?'+':''}${CREATIVE_VALIDATION.profit.toFixed(2)} units`,'Historical flat-stake result'],[CREATIVE_VALIDATION.passed?'UNLOCKED':'LOCKED','Creative validation gate']].map(v=>`<div class="metric"><b>${v[0]}</b><span>${v[1]}</span></div>`).join('');
+}
+renderValidation();renderUnifiedSafety();renderCreativeFormula();$('run').addEventListener('click',()=>setTimeout(()=>{renderUnifiedSafety();renderCreativeFormula()},420));
 </script></body></html>
